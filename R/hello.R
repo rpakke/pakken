@@ -85,7 +85,7 @@ bar <- function(var, dset=d) {
 }
 
 # Scatterplot uden noget
-scar <- function(var1, var2, dset=d) {
+scat <- function(var1, var2, dset=d) {
   dset %>% ggplot2::ggplot(aes(x = !!rlang::enquo(var1), y = !!rlang::enquo(var2))) +
   ggplot2::geom_point()
 }
