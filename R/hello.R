@@ -174,12 +174,13 @@ kryzz <- function(kryds, ..., dset=d) {
 #################################################################
 
 allkryds <- function(x, kryds) {
-  navne <- names(x)
+  z <- x %>% dplyr::select(-!!rlang::enquo(kryds))
+  navne <- names(z)
   for (var in navne) {
-    y <- labelled::var_label(d[[var]])
+    y <- labelled::var_label(x[[var]])
     if (!is.null(y)) {cat(" ", y, "\n\n")}
     t <- x %>% janitor::tabyl(!!var) %>% janitor::adorn_pct_formatting()
-    u <- x %>% janitor::tabyl(!!var, !!rlang::enquo(kryds)) %>%
+    u <- x %>% janitor::tabyl(!!sym(var), !!rlang::enquo(kryds)) %>%
       janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
       janitor::adorn_pct_formatting()
     if (length(t$n) < 20) {
