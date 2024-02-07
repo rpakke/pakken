@@ -59,7 +59,9 @@ tabl <- function(var1, var2, dset=d) {
   if (missing(var2)) {
     str <- dplyr::as_label(rlang::enquo(var1))
     x <- labelled::var_label(dset[[str]])
-    cat(" ", x, "\n")
+    if (!is.null(x)) {
+      cat(" ", x, "\n\n")
+    }
     dset %>% janitor::tabyl(!!rlang::enquo(var1)) %>% janitor::adorn_pct_formatting()
   } else {
     dset %>% janitor::tabyl(!!rlang::enquo(var1), !!rlang::enquo(var2)) %>%
