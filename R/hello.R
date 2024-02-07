@@ -43,13 +43,7 @@ funktioner()
 
 pakr <- function(p1, p2, p3, p4, p5, p6, p7) {
   pacman::p_load(tidyverse, janitor, bannerCommenter)
-  if (!missing(p1)) {pacman::p_load(!!rlang::enquo(p1))}
-  if (!missing(p2)) {pacman::p_load(p2)}
-  if (!missing(p3)) {pacman::p_load(p3)}
-  if (!missing(p4)) {pacman::p_load(p4)}
-  if (!missing(p5)) {pacman::p_load(p5)}
-  if (!missing(p6)) {pacman::p_load(p6)}
-  if (!missing(p7)) {pacman::p_load(p7)}
+  pacman::p_load(p1)
 }
 
 
