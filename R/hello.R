@@ -12,12 +12,12 @@ funktioner <- function() {
       "grp:      Grouped means \n",
       "          - grp(group_var, mean_var) \n\n",
 
-      "alltabs:  Frekvenstabeller for alle variable \n",
+      "alltabs:  Frekvenstabeller for alle variable i x \n",
       "          (ud over dem med mere end 20 udfald) \n",
-      "          - alltabs() \n\n",
+      "          - alltabs(x) \n\n",
 
       "tabzz:    Mange frekvenstabeller \n",
-      "          - alltabs(var1, var2, var3, ...) \n\n",
+      "          - tabzz(var1, var2, var3, ...) \n\n",
 
       "kryzz:    Mange krydstabeller \n",
       "          - kryzz(krydsvar, var1, var2 ,...) \n\n",
@@ -107,14 +107,14 @@ scat2 <- function(var1, var2, dset=d) {
 ##                           alltabs                           ##
 #################################################################
 
-alltabs <- function() {
-  navne <- names(d)
+alltabs <- function(x) {
+  navne <- names(x)
   for (var in navne) {
-    x <- labelled::var_label(d[[var]])
-    if (!is.null(x)) {
-      cat(" ", x, "\n")
+    y <- labelled::var_label(d[[var]])
+    if (!is.null(y)) {
+      cat(" ", y, "\n")
     }
-    t <- d %>% janitor::tabyl(!!var) %>% janitor::adorn_pct_formatting()
+    t <- x %>% janitor::tabyl(!!var) %>% janitor::adorn_pct_formatting()
     if (length(t$n) < 20) {
       print(t)
       cat("\n\n")
