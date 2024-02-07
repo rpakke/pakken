@@ -165,7 +165,25 @@ kryzz <- function(kryds, ..., dset=d) {
 }
 
 
+#################################################################
+##                           allkryds                          ##
+#################################################################
 
+alltabs <- function(x, kryds) {
+  navne <- names(x)
+  for (var in navne) {
+    y <- labelled::var_label(d[[var]])
+    if (!is.null(y)) {cat(" ", y, "\n\n")}
+    t <- x %>% janitor::tabyl(!!var) %>% janitor::adorn_pct_formatting()
+    u <- x %>% janitor::tabyl(!!var, !!rlang::enquo(kryds)) %>%
+      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
+      janitor::adorn_pct_formatting()
+    if (length(t$n) < 20) {
+      print(u)
+      cat("\n\n")
+    }
+  }
+}
 
 
 
