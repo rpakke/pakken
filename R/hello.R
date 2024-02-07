@@ -152,6 +152,7 @@ kryzz <- function(kryds, ..., dset=d) {
     dset %>% janitor::tabyl(!!var, !!rlang::enquo(kryds)) %>%
       janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
       janitor::adorn_pct_formatting() %>% print()
+    cat("\n\n")
   }
 }
 
