@@ -16,6 +16,10 @@ funktioner <- function() {
       "          (ud over dem med mere end 20 udfald) \n",
       "          - alltabs(x) \n\n",
 
+      "allkryds: Krydstabeller for alle variable i x \n",
+      "          (ud over dem med mere end 20 udfald) \n",
+      "          - allkryds(x, krydsvar) \n\n",
+
       "tabzz:    Mange frekvenstabeller \n",
       "          - tabzz(var1, var2, var3, ...) \n\n",
 
@@ -169,7 +173,7 @@ kryzz <- function(kryds, ..., dset=d) {
 ##                           allkryds                          ##
 #################################################################
 
-alltabs <- function(x, kryds) {
+allkryds <- function(x, kryds) {
   navne <- names(x)
   for (var in navne) {
     y <- labelled::var_label(d[[var]])
