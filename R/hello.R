@@ -112,7 +112,7 @@ alltabs <- function(x) {
   for (var in navne) {
     y <- labelled::var_label(d[[var]])
     if (!is.null(y)) {
-      cat(" ", y, "\n")
+      cat(" ", y, "\n\n")
     }
     t <- x %>% janitor::tabyl(!!var) %>% janitor::adorn_pct_formatting()
     if (length(t$n) < 20) {
