@@ -41,13 +41,15 @@ funktioner()
 ##                             pakr                             ##
 ##################################################################
 
-pakr <- function(p1, p2, p3, p4, p5, p6, p7) {
+pakr <- function(...) {
   pacman::p_load(tidyverse, janitor, bannerCommenter)
-  if (!missing(p1)) {
-    p1 <- rlang::as_string(rlang::ensym(p1))
-    pacman::p_load(get(p1))
+  packages <- enquos(...)
+  for (package in packages) {
+    package_name <- as.character(substitute(package))
+    library(package_name, character.only = TRUE)
   }
 }
+
 
 
 ##################################################################
