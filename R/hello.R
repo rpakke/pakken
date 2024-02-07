@@ -85,19 +85,6 @@ grp <- function(gruppe, ..., dset=d) {
   }
 }
 
-tabzz <- function(..., dset=d) {
-  args <- rlang::enquos(...)
-  for (var in args) {
-    str <- dplyr::as_label(var)
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n\n")}
-    dset %>% janitor::tabyl(!!var) %>% 
-      janitor::adorn_pct_formatting() %>% print()
-    cat("\n\n")
-  }
-} 
-
-
 ##################################################################
 ##                            Grafer                            ##
 ##################################################################
