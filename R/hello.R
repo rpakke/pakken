@@ -16,10 +16,10 @@ funktioner <- function() {
       "          (ud over dem med mere end 20 udfald) \n",
       "          - alltabs() \n\n",
 
-      "tabzz:    Mange frekvenstabeller (max 20) \n",
+      "tabzz:    Mange frekvenstabeller \n",
       "          - alltabs(var1, var2, var3, ...) \n\n",
 
-      "kryzz:    Mange krydstabeller (max 20) \n",
+      "kryzz:    Mange krydstabeller \n",
       "          - kryzz(krydsvar, var1, var2 ,...) \n\n",
 
       "\n ***** GRAFER ****** \n\n",
@@ -43,13 +43,12 @@ funktioner()
 
 pakr <- function(...) {
   pacman::p_load(tidyverse, janitor, bannerCommenter)
-  packages <- enquos(...)
+  packages <- rlang::enquos(...)
   for (package in packages) {
-    package_name <- as.character(substitute(package))
+    package_name <- rlang::as_name(substitute(package))
     library(package_name, character.only = TRUE)
   }
 }
-
 
 
 ##################################################################
@@ -127,354 +126,34 @@ alltabs <- function() {
 ##                            tabzz                            ##
 #################################################################
 
-tabzz <- function(var1, var2, var3, var4, var5, var6, var7, var8, var9, var10,
-                    var11, var12, var13, var14, var15, var16, var17, var18, var19, var20, dset=d) {
-  str <- dplyr::as_label(rlang::enquo(var1))
-  x <- labelled::var_label(dset[[str]])
-  cat(" ", x, "\n")
-  dset %>% janitor::tabyl(!!rlang::enquo(var1)) %>% janitor::adorn_pct_formatting() %>% print()
-  if (!missing(var2)) {cat("\n\n")}
-  if (!missing(var2)) {
-    str <- dplyr::as_label(rlang::enquo(var2))
+tabzz <- function(..., dset=d) {
+  args <- rlang::enquos(...)
+  for (var in args) {
+    str <- dplyr::as_label(var)
     x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var2)) %>% janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var3)) {cat("\n\n")}
-  if (!missing(var3)) {
-    str <- dplyr::as_label(rlang::enquo(var3))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var3)) %>%
+    if (!is.null(x)) {cat(" ", x, "\n\n")}
+    dset %>% janitor::tabyl(!!var) %>% 
       janitor::adorn_pct_formatting() %>% print()
+    cat("\n\n")
   }
-  if (!missing(var4)) {cat("\n\n")}
-  if (!missing(var4)) {
-    str <- dplyr::as_label(rlang::enquo(var4))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var4)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var5)) {cat("\n\n")}
-  if (!missing(var5)) {
-    str <- dplyr::as_label(rlang::enquo(var5))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var5)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var6)) {cat("\n\n")}
-  if (!missing(var6)) {
-    str <- dplyr::as_label(rlang::enquo(var6))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var6)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var7)) {cat("\n\n")}
-  if (!missing(var7)) {
-    str <- dplyr::as_label(rlang::enquo(var7))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var7)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var8)) {cat("\n\n")}
-  if (!missing(var8)) {
-    str <- dplyr::as_label(rlang::enquo(var8))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var8)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var9)) {cat("\n\n")}
-  if (!missing(var9)) {
-    str <- dplyr::as_label(rlang::enquo(var9))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var9)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var10)) {cat("\n\n")}
-  if (!missing(var10)) {
-    str <- dplyr::as_label(rlang::enquo(var10))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var10)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var11)) {cat("\n\n")}
-  if (!missing(var11)) {
-    str <- dplyr::as_label(rlang::enquo(var11))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var11)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var12)) {cat("\n\n")}
-  if (!missing(var12)) {
-    str <- dplyr::as_label(rlang::enquo(var12))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var12)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var13)) {cat("\n\n")}
-  if (!missing(var13)) {
-    str <- dplyr::as_label(rlang::enquo(var13))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var13)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var14)) {cat("\n\n")}
-  if (!missing(var14)) {
-    str <- dplyr::as_label(rlang::enquo(var14))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var14)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var15)) {cat("\n\n")}
-  if (!missing(var15)) {
-    str <- dplyr::as_label(rlang::enquo(var15))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var15)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var16)) {cat("\n\n")}
-  if (!missing(var16)) {
-    str <- dplyr::as_label(rlang::enquo(var16))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var16)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var17)) {cat("\n\n")}
-  if (!missing(var17)) {
-    str <- dplyr::as_label(rlang::enquo(var17))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var17)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var18)) {cat("\n\n")}
-  if (!missing(var18)) {
-    str <- dplyr::as_label(rlang::enquo(var18))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var18)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var19)) {cat("\n\n")}
-  if (!missing(var19)) {
-    str <- dplyr::as_label(rlang::enquo(var19))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var19)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var20)) {cat("\n\n")}
-  if (!missing(var20)) {
-    str <- dplyr::as_label(rlang::enquo(var20))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var20)) %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-}
+} 
 
 
 #################################################################
 ##                            kryzz                            ##
 #################################################################
 
-kryzz <- function(kryds, var1, var2, var3, var4, var5, var6, var7, var8, var9, var10,
-                    var11, var12, var13, var14, var15, var16, var17, var18, var19, var20, dset=d) {
-
-  str <- dplyr::as_label(rlang::enquo(var1))
-  x <- labelled::var_label(dset[[str]])
-  if (!is.null(x)) {cat(" ", x, "\n")}
-  dset %>% janitor::tabyl(!!rlang::enquo(var1), !!rlang::enquo(kryds)) %>%
-    janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-    janitor::adorn_pct_formatting() %>% print()
-
-  if (!missing(var2)) {cat("\n\n")}
-  if (!missing(var2)) {
-    str <- dplyr::as_label(rlang::enquo(var2))
+kryzz <- function(kryds, ..., dset=d) {
+  args <- rlang::enquos(...)
+  for (var in args) {
+    str <- dplyr::as_label(var)
     x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var2), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var3)) {cat("\n\n")}
-  if (!missing(var3)) {
-    str <- dplyr::as_label(rlang::enquo(var3))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var3), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var4)) {cat("\n\n")}
-  if (!missing(var4)) {
-    str <- dplyr::as_label(rlang::enquo(va42))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var4), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var5)) {cat("\n\n")}
-  if (!missing(var5)) {
-    str <- dplyr::as_label(rlang::enquo(var5))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var5), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var6)) {cat("\n\n")}
-  if (!missing(var6)) {
-    str <- dplyr::as_label(rlang::enquo(var6))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var6), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var7)) {cat("\n\n")}
-  if (!missing(var7)) {
-    str <- dplyr::as_label(rlang::enquo(var7))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var7), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var8)) {cat("\n\n")}
-  if (!missing(var8)) {
-    str <- dplyr::as_label(rlang::enquo(var8))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var8), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var9)) {cat("\n\n")}
-  if (!missing(var9)) {
-    str <- dplyr::as_label(rlang::enquo(var9))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var9), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var10)) {cat("\n\n")}
-  if (!missing(var10)) {
-    str <- dplyr::as_label(rlang::enquo(var10))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var10), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var11)) {cat("\n\n")}
-  if (!missing(var11)) {
-    str <- dplyr::as_label(rlang::enquo(var11))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var11), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var12)) {cat("\n\n")}
-  if (!missing(var12)) {
-    str <- dplyr::as_label(rlang::enquo(var12))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var12), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var13)) {cat("\n\n")}
-  if (!missing(var13)) {
-    str <- dplyr::as_label(rlang::enquo(var13))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var13), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var14)) {cat("\n\n")}
-  if (!missing(var14)) {
-    str <- dplyr::as_label(rlang::enquo(var14))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var14), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var15)) {cat("\n\n")}
-  if (!missing(var15)) {
-    str <- dplyr::as_label(rlang::enquo(var15))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var15), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var16)) {cat("\n\n")}
-  if (!missing(var16)) {
-    str <- dplyr::as_label(rlang::enquo(var16))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var16), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var17)) {cat("\n\n")}
-  if (!missing(var17)) {
-    str <- dplyr::as_label(rlang::enquo(var17))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var17), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var18)) {cat("\n\n")}
-  if (!missing(var18)) {
-    str <- dplyr::as_label(rlang::enquo(var18))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var18), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var19)) {cat("\n\n")}
-  if (!missing(var19)) {
-    str <- dplyr::as_label(rlang::enquo(var19))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var19), !!rlang::enquo(kryds)) %>%
-      janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
-      janitor::adorn_pct_formatting() %>% print()
-  }
-  if (!missing(var20)) {cat("\n\n")}
-  if (!missing(var20)) {
-    str <- dplyr::as_label(rlang::enquo(var20))
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n")}
-    dset %>% janitor::tabyl(!!rlang::enquo(var20), !!rlang::enquo(kryds)) %>%
+    if (!is.null(x)) {cat(" ", x, "\n\n")}
+    dset %>% janitor::tabyl(!!var, !!rlang::enquo(kryds)) %>%
       janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>%
       janitor::adorn_pct_formatting() %>% print()
   }
 }
-
-
 
 
 
