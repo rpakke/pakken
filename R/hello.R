@@ -73,30 +73,13 @@ tabl <- function(var1, var2, dset=d) {
 ##                             grp                             ##
 #################################################################
 
-grp <- function(var1, var2, dset=d) {
-  dset %>% dplyr::group_by(!!rlang::enquo(var1)) %>%
-    dplyr::summarise(mean = mean(!!rlang::enquo(var2), na.rm=T))
-}
-
 grp <- function(gruppe, ..., dset=d) {
   args <- rlang::enquos(...)
   for (var in args) {
     dset %>% dplyr::group_by(!!rlang::enquo(gruppe)) %>%
-      dplyr::summarise(!!var = mean(!!var, na.rm=T))
+      dplyr::summarise(var = mean(!!var, na.rm=T))
   }
 }
-
-tabzz <- function(..., dset=d) {
-  args <- rlang::enquos(...)
-  for (var in args) {
-    str <- dplyr::as_label(var)
-    x <- labelled::var_label(dset[[str]])
-    if (!is.null(x)) {cat(" ", x, "\n\n")}
-    dset %>% janitor::tabyl(!!var) %>% 
-      janitor::adorn_pct_formatting() %>% print()
-    cat("\n\n")
-  }
-} 
 
 
 ##################################################################
