@@ -104,7 +104,7 @@ bar <- function(var, dset=d) {
 # Scatterplot uden noget
 scat <- function(var1, var2, dset=d) {
   dset %>% ggplot2::ggplot(aes(x = !!rlang::enquo(var1), y = !!rlang::enquo(var2))) +
-  ggplot2::geom_point()
+    ggplot2::geom_point()
 }
 
 # Scatterplot 2
@@ -144,11 +144,11 @@ tabzz <- function(..., dset=d) {
     str <- dplyr::as_label(var)
     x <- labelled::var_label(dset[[str]])
     if (!is.null(x)) {cat(" ", x, "\n\n")}
-    dset %>% janitor::tabyl(!!var) %>% 
+    dset %>% janitor::tabyl(!!var) %>%
       janitor::adorn_pct_formatting() %>% print()
     cat("\n\n")
   }
-} 
+}
 
 
 #################################################################
@@ -189,6 +189,32 @@ allkryds <- function(x, kryds) {
     }
   }
 }
+
+
+
+
+
+#################################################################
+##                      Her testes pakken                      ##
+#################################################################
+
+stop("Så er du klar :-)")
+
+pakr(adviceverse)
+d <- tibble(mtcars)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
