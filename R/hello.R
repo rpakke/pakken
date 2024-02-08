@@ -26,6 +26,10 @@ funktioner <- function() {
       "kryzz:    Mange krydstabeller \n",
       "          - kryzz(krydsvar, var1, var2 ,...) \n\n",
 
+      "multi:    Nyttigt ved afkrydsningsfelter \n",
+      "          - multi(prefix, valgt, sort = F) \n",
+      "          - fx multi(t_, Valgt) / multi(t_, Valgt, T) \n\n",
+
       "\n ***** GRAFER ****** \n\n",
       "bar:      Søjlediagram \n",
       "          - bar(var) \n\n",
@@ -189,5 +193,38 @@ allkryds <- function(x, kryds) {
     }
   }
 }
+
+
+
+##################################################################
+##                            multi                             ##
+##################################################################
+
+multi <- function(prefix, valgt, sort = F) {
+  z <- d %>%
+    dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix)))) %>%
+    dplyr::mutate_all(~ stringr::str_replace_all(., rlang::quo_text(rlang::enquo(valgt)), "øøøøø"))
+  o <- z %>% names()
+  w <- c()
+  for (var in o) {
+    k <- tabl(!!var, dset=z)
+    p <- k %>% dplyr::arrange(!!var) %>% utils::tail(1)
+    if (p[1,1]!="øøøøø") {stop("Hov, det er vist ikke dét, det hedder")}
+    q <- p[,3]
+    w <- append(w, q)
+  }
+  if (sort == T) {
+    tibble(name = o, percent = w) %>% dplyr::arrange(dplyr::desc(percent))
+  } else {tibble(name = o, percent = w)}
+}
+
+
+
+
+
+
+
+
+
 
 
