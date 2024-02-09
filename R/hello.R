@@ -30,6 +30,10 @@ funktioner <- function() {
       "          - multi(prefix, valgt, sort = F) \n",
       "          - fx multi(t_, Valgt) / multi(t_, Valgt, T) \n\n",
 
+      "excel:    Excel-krydstabeller for alle variable i x \n",
+      "          - excel(x, 'filnavn', krydsvar1, krydsvar2, ...) \n",
+      "          - fx excel(d, 'Tabeller', køn, region, segment) \n\n",
+
       "\n ***** GRAFER ****** \n\n",
       "bar:      Søjlediagram \n",
       "          - bar(var) \n\n",
@@ -72,6 +76,13 @@ tabl <- function(var1, var2, dset=d) {
     }
     dset %>% janitor::tabyl(!!rlang::enquo(var1)) %>% janitor::adorn_pct_formatting()
   } else {
+    str <- dplyr::as_label(rlang::enquo(var1))
+    x <- labelled::var_label(dset[[str]])
+    str <- dplyr::as_label(rlang::enquo(var2))
+    y <- labelled::var_label(dset[[str]])
+    if (!is.null(x)) {
+      cat(" ", x, "[X]", y, "\n\n")
+    }
     dset %>% janitor::tabyl(!!rlang::enquo(var1), !!rlang::enquo(var2)) %>%
       janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>% janitor::adorn_pct_formatting()
   }}
@@ -219,8 +230,79 @@ multi <- function(prefix, valgt, sort = F) {
 }
 
 
+#################################################################
+##                            excel                            ##
+#################################################################
 
+excel <- function(df, filename, ...) {
 
+  selected_vars <- sapply(df, function(k) length(unique(k))) < 20
+  selected_df <- df[, selected_vars, drop = FALSE]
+  navne <- names(selected_df)
+
+  x <- selected_df %>% dplyr::mutate(totalvar = "Total")
+
+  args <- rlang::enquos(...)
+
+  pp <- NULL
+  tom <- tibble(" " = NA, Total=NA)
+
+  # Totaler
+  for (var in navne) {
+    a <- x %>% janitor::tabyl(!!sym(var), totalvar) %>%
+      janitor::adorn_totals() %>%
+      janitor::adorn_percentages(denominator = "col") %>%
+      dplyr::mutate_if(is.numeric, round, 2) %>%
+      dplyr::rename(" " = !!sym(var)) %>%
+      tibble::as.tibble()
+
+    z <- labelled::var_label(x[[var]])
+    if (!is.null(z)) {
+      ax <- tibble(" " = labelled::var_label(x[[var]]), Total=NA)
+    } else {
+      ax <- tibble(" " = var, Total=NA)
+    }
+
+    if (is.null(pp)) {
+      pp <- rbind(ax, a, tom)
+    } else {
+      pp <- rbind(pp, ax, a, tom)
+    }
+
+  }
+
+  # Kryds
+  for (kryds in args) {
+    y <- x %>% mutate(tempvar = !!kryds)
+    qq <- NULL
+    for (var in navne) {
+      a <- y %>% janitor::tabyl(!!sym(var), tempvar) %>%
+        janitor::adorn_totals() %>%
+        janitor::adorn_percentages(denominator = "col") %>%
+        dplyr::mutate_if(is.numeric, round, 2) %>%
+        dplyr::mutate(!!sym(var) := NA) %>%
+        dplyr::rename(" " := !!sym(var)) %>%
+        tibble::as.tibble()
+      tom <- a[1,] %>% dplyr::mutate_all(~if_else(is.na(.), NA, NA))
+
+      if (is.null(qq)) {
+        qq <- rbind(tom, a)
+      } else {
+        qq <- rbind(qq, tom, tom, a)
+      }
+    }
+
+    qq <- rbind(qq, tom)
+    pp <- cbind(pp, qq)
+    print("Jeg er i proces")
+  }
+
+  options("openxlsx.numFmt" = "0%")
+  hs <- openxlsx::createStyle(textDecoration = "BOLD", halign="center")
+  openxlsx::write.xlsx(pp, paste0(filename,".xlsx"), zoom=90, firstRow=T,
+                       headerStyle = hs)
+  print("DONE!!")
+}
 
 
 
