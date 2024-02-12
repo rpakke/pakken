@@ -271,6 +271,8 @@ excel <- function(df, filename, ...) {
 
   }
 
+  print("Jeg er i proces")
+                          
   # Kryds
   for (kryds in args) {
     y <- x %>% mutate(tempvar = !!kryds)
@@ -300,7 +302,7 @@ excel <- function(df, filename, ...) {
   options("openxlsx.numFmt" = "0%")
   hs <- openxlsx::createStyle(textDecoration = "BOLD", halign="center")
   openxlsx::write.xlsx(pp, paste0(filename,".xlsx"), zoom=90, firstRow=T,
-                       headerStyle = hs)
+                       firstActiveCol = 3, headerStyle = hs)
   print("DONE!!")
 }
 
