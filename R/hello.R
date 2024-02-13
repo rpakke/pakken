@@ -27,7 +27,7 @@ funktioner <- function() {
       "          - kryzz(krydsvar, var1, var2 ,...) \n\n",
 
       "multi:    Nyttigt ved afkrydsningsfelter \n",
-      "          - multi(prefix, valgt, sort = F) \n",
+      "          - multi(prefix, valgt, sort = F, d = d) \n",
       "          - fx multi(t_, Valgt) / multi(t_, Valgt, T) \n\n",
 
       "excel:    Excel-krydstabeller for alle variable i x \n",
