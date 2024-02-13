@@ -306,7 +306,8 @@ excel <- function(df, filename, ...) {
   print("DONE!!")
 
   for (kryds in args) {
-    print(cat(janitor::tabyl(x, !!kryds),"\n\n"))
+    print(janitor::tabyl(x, !!kryds))
+    print(cat("\n\n"))
   }
 }
 
