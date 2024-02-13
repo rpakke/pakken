@@ -271,7 +271,7 @@ excel <- function(df, filename, ...) {
 
   }
 
-  print("Jeg er i proces")
+  print("Så er vi i gang")
                           
   # Kryds
   for (kryds in args) {
@@ -296,7 +296,7 @@ excel <- function(df, filename, ...) {
 
     qq <- rbind(qq, tom)
     pp <- cbind(pp, qq)
-    print(paste0("Jeg er i proces (", rlang::quo_name(kryds), ")"))
+    print(paste0("Nu har jeg lavet ", rlang::quo_name(kryds)))
   }
 
   options("openxlsx.numFmt" = "0%")
