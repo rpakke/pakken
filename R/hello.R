@@ -211,7 +211,7 @@ allkryds <- function(x, kryds) {
 ##                            multi                             ##
 ##################################################################
 
-multi <- function(prefix, valgt, sort = F) {
+multi <- function(prefix, valgt, sort = F, d = d) {
   z <- d %>%
     dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix)))) %>%
     dplyr::mutate_all(~ stringr::str_replace_all(., rlang::quo_text(rlang::enquo(valgt)), "øøøøø"))
