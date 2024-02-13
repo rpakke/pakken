@@ -306,7 +306,7 @@ excel <- function(df, filename, ...) {
   print("DONE!!")
 
   for (kryds in args) {
-    janitor::tabyl(x, !!kryds)
+    print(janitor::tabyl(x, !!kryds))
   }
 }
 
