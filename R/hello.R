@@ -254,7 +254,7 @@ excel <- function(df, filename, ...) {
       janitor::adorn_percentages(denominator = "col") %>%
       dplyr::mutate_if(is.numeric, round, 2) %>%
       dplyr::rename(" " = !!sym(var)) %>%
-      tibble::as.tibble()
+      tibble::as_tibble()
 
     z <- labelled::var_label(x[[var]])
     if (!is.null(z)) {
@@ -284,7 +284,7 @@ excel <- function(df, filename, ...) {
         dplyr::mutate_if(is.numeric, round, 2) %>%
         dplyr::mutate(!!sym(var) := NA) %>%
         dplyr::rename(" " := !!sym(var)) %>%
-        tibble::as.tibble()
+        tibble::as_tibble()
       tom <- a[1,] %>% dplyr::mutate_all(~if_else(is.na(.), NA, NA))
 
       if (is.null(qq)) {
