@@ -301,12 +301,12 @@ excel <- function(df, filename, ...) {
 
   options("openxlsx.numFmt" = "0%")
   hs <- openxlsx::createStyle(textDecoration = "BOLD", halign="center")
-  openxlsx::write.xlsx(pp, paste0(filename,".xlsx"), zoom=100, firstRow=T,
+  openxlsx::write.xlsx(pp, paste0(filename,".xlsx"), zoom=100, firstActiveRow=2,
                        firstActiveCol = 3, headerStyle = hs)
   print("DONE!!")
 
   for (kryds in args) {
-    tabl(!!kryds)
+    janitor::tabyl(x, !!kryds)
   }
 }
 
