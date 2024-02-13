@@ -224,6 +224,8 @@ multi <- function(prefix, valgt, sort = F) {
     q <- p[,3]
     w <- append(w, q)
   }
+  y <- labelled::var_label(d[[o[1]])
+    if (!is.null(y)) {cat(" ", y, "\n\n")}
   if (sort == T) {
     tibble(name = o, percent = w) %>% dplyr::arrange(dplyr::desc(percent))
   } else {tibble(name = o, percent = w)}
