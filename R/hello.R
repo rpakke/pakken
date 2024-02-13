@@ -296,7 +296,7 @@ excel <- function(df, filename, ...) {
 
     qq <- rbind(qq, tom)
     pp <- cbind(pp, qq)
-    print("Jeg er i proces")
+    print(paste0("Jeg er i proces (", rlang::quo_name(kryds), ")"))
   }
 
   options("openxlsx.numFmt" = "0%")
