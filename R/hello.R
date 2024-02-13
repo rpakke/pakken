@@ -304,6 +304,10 @@ excel <- function(df, filename, ...) {
   openxlsx::write.xlsx(pp, paste0(filename,".xlsx"), zoom=100, firstRow=T,
                        firstActiveCol = 3, headerStyle = hs)
   print("DONE!!")
+
+  for (kryds in args) {
+    tabl(!!kryds)
+  }
 }
 
 
