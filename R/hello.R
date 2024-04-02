@@ -4,46 +4,51 @@
 
 funktioner <- function() {
   cat("\n pakr:     tidyverse, janitor, bannerC \n\n",
-
+      
       "\n ***** TABELLER MV. ***** \n\n",
       "tabl:     Frekvenstabeller og krydstabeller \n",
       "          - tabl(var1) eller tabl(var1, var2) \n\n",
-
+      
       "grp:      Grouped means \n",
       "          - grp(group_var, mean_var) \n\n",
-
+      
       "alltabs:  Frekvenstabeller for alle variable i x \n",
       "          (ud over dem med mere end 20 udfald) \n",
       "          - alltabs(x) \n\n",
-
+      
       "allkryds: Krydstabeller for alle variable i x \n",
       "          (ud over dem med mere end 20 udfald) \n",
       "          - allkryds(x, krydsvar) \n\n",
-
+      
       "tabzz:    Mange frekvenstabeller \n",
       "          - tabzz(var1, var2, var3, ...) \n\n",
-
+      
       "kryzz:    Mange krydstabeller \n",
       "          - kryzz(krydsvar, var1, var2 ,...) \n\n",
-
+      
       "multi:    Nyttigt ved afkrydsningsfelter \n",
-      "          - multi(prefix, valgt, sort = F, d = d) \n",
-      "          - fx multi(t_, Valgt) / multi(t_, Valgt, T) \n\n",
-
+      "          - multi(prefix, valgt, sort = F, dset = d) \n",
+      "          - fx multi(t_, \"Meget enig\") / multi(t_, \"Valgt\", T) \n\n",
+      
       "excel:    Excel-krydstabeller for alle variable i x \n",
-      "          - excel(x, 'filnavn', krydsvar1, krydsvar2, ...) \n",
-      "          - fx excel(d, 'Tabeller', køn, region, segment) \n\n",
-
+      "          - excel(x, 'filnavn', krydsvar1, krydsvar2, ..., totaler=T) \n",
+      "          - fx excel(d, 'Tabeller', køn, region, segment, totaler=F) \n\n",
+      
       "\n ***** GRAFER ****** \n\n",
       "bar:      Søjlediagram \n",
       "          - bar(var) \n\n",
-
+      
       "scat:     Scatterplot uden noget \n",
       "          - scat(var1, var2) \n\n",
-
+      
       "scat2:    Scatterplot med jitter og LOESS \n",
       "          - scat2(var1, var2) \n\n",
-
+      
+      "\n ***** ANDET ****** \n\n",
+      "behold:   Behold kun nogle datasæt \n",
+      "          - behold(dd, d2) \n\n",
+      
+      
       "\n PS. Husk, at dit datasæt skal hedde 'd' \n")
 }
 
@@ -206,28 +211,29 @@ allkryds <- function(x, kryds) {
 }
 
 
-
 ##################################################################
 ##                            multi                             ##
 ##################################################################
 
-multi <- function(prefix, valgt, sort = F, d = d) {
+multi <- function(prefix, valgt, sort = F, dset = d) {
   z <- d %>%
     dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix)))) %>%
-    dplyr::mutate_all(~ stringr::str_replace_all(., rlang::quo_text(rlang::enquo(valgt)), "øøøøø"))
+    dplyr::mutate_all(~ stringr::str_replace_all(., valgt, "øøøøø"))
   o <- z %>% names()
   w <- c()
   for (var in o) {
     k <- tabl(!!var, dset=z)
     p <- k %>% dplyr::arrange(!!var) %>% utils::tail(1)
-    if (p[1,1]!="øøøøø") {stop("Hov, det er vist ikke dét, det hedder")}
-    q <- p[,3]
+    if (p[1,1]!="øøøøø") {q <- "0%"} else {q <- p[,3]}
     w <- append(w, q)
   }
   y <- labelled::var_label(d[[o[1]]])
   if (!is.null(y)) {cat(" ", y, "\n\n")}
   if (sort == T) {
-    tibble(name = o, percent = w) %>% dplyr::arrange(dplyr::desc(percent))
+    tibble(name = o, percent = w) %>%
+      dplyr::mutate(percent_numeric = as.numeric(sub("%", "", percent))) %>% 
+      dplyr::arrange(dplyr::desc(percent_numeric)) %>% 
+      dplyr::select(-percent_numeric)
   } else {tibble(name = o, percent = w)}
 }
 
@@ -236,19 +242,19 @@ multi <- function(prefix, valgt, sort = F, d = d) {
 ##                            excel                            ##
 #################################################################
 
-excel <- function(df, filename, ...) {
-
+excel <- function(df, filename, ..., totaler=T) {
+  
   selected_vars <- sapply(df, function(k) length(unique(k))) < 20
   selected_df <- df[, selected_vars, drop = FALSE]
   navne <- names(selected_df)
-
+  
   x <- selected_df %>% dplyr::mutate(totalvar = "Total")
-
+  
   args <- rlang::enquos(...)
-
+  
   pp <- NULL
   tom <- tibble(" " = NA, Total=NA)
-
+  
   # Totaler
   for (var in navne) {
     a <- x %>% janitor::tabyl(!!sym(var), totalvar) %>%
@@ -257,24 +263,24 @@ excel <- function(df, filename, ...) {
       dplyr::mutate_if(is.numeric, round, 2) %>%
       dplyr::rename(" " = !!sym(var)) %>%
       tibble::as_tibble()
-
+    
     z <- labelled::var_label(x[[var]])
     if (!is.null(z)) {
       ax <- tibble(" " = labelled::var_label(x[[var]]), Total=NA)
     } else {
       ax <- tibble(" " = var, Total=NA)
     }
-
+    
     if (is.null(pp)) {
       pp <- rbind(ax, a, tom)
     } else {
       pp <- rbind(pp, ax, a, tom)
     }
-
+    
   }
-
+  
   print("Så er vi i gang")
-                          
+  
   # Kryds
   for (kryds in args) {
     y <- x %>% mutate(tempvar = !!kryds)
@@ -288,30 +294,56 @@ excel <- function(df, filename, ...) {
         dplyr::rename(" " := !!sym(var)) %>%
         tibble::as_tibble()
       tom <- a[1,] %>% dplyr::mutate_all(~if_else(is.na(.), NA, NA))
-
+      
       if (is.null(qq)) {
         qq <- rbind(tom, a)
       } else {
         qq <- rbind(qq, tom, tom, a)
       }
     }
-
+    
     qq <- rbind(qq, tom)
     pp <- cbind(pp, qq)
     print(paste0("Nu har jeg lavet ", rlang::quo_name(kryds)))
   }
-
+  
+  if (totaler==F) {
+    tempnames <- names(pp)
+    names(pp)[1] <- "nejtiltotaler"
+    names(pp) <- make.unique(names(pp))
+    pp <- pp %>% dplyr::filter(nejtiltotaler != "Total" | is.na(nejtiltotaler) | nejtiltotaler == "")
+    names(pp) <- tempnames}
+  
   options("openxlsx.numFmt" = "0%")
   hs <- openxlsx::createStyle(textDecoration = "BOLD", halign="center")
   openxlsx::write.xlsx(pp, paste0(filename,".xlsx"), zoom=100, firstActiveRow=2,
                        firstActiveCol = 3, headerStyle = hs)
   print("DONE!!")
-
+  
   for (kryds in args) {
     print(janitor::tabyl(x, !!kryds))
     print(cat("\n\n"))
   }
 }
+
+
+##################################################################
+##                            behold                            ##
+##################################################################
+
+behold <- function(...) {
+  keeps <- sapply(substitute(list(...))[-1], deparse)
+  objs <- ls(pos=1)
+  
+  keeps_exist <- keeps[keeps %in% objs]
+  if (length(keeps_exist) == 0) {stop("findes ik")}
+  
+  objs_remove <- setdiff(objs, keeps_exist)
+  if (length(objs_remove)>0) {rm(list=objs_remove, pos=1)}
+}
+
+
+
 
 
 
