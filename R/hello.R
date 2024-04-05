@@ -28,7 +28,11 @@ funktioner <- function() {
       
       "multi:    Nyttigt ved afkrydsningsfelter \n",
       "          - multi(prefix, valgt, sort = F, dset = d) \n",
-      "          - fx multi(t_, \"Meget enig\") / multi(t_, \"Valgt\", T) \n\n",
+      "          - fx multi(t_, \"Meget enig\") / multi(t_, \"Valgt\", sort = T) \n\n",
+      
+      "multi2:   Samme, men nu som krydstabel! \n",
+      "          - multi2(prefix, valgt, krydsvar, sort = F, dset=d) \n",
+      "          - fx multi2(t_, \"Meget enig\", region) \n\n",
       
       "excel:    Excel-krydstabeller for alle variable i x \n",
       "          - excel(x, 'filnavn', krydsvar1, krydsvar2, ..., totaler=T) \n",
@@ -79,7 +83,8 @@ tabl <- function(var1, var2, dset=d) {
     if (!is.null(x)) {
       cat(" ", x, "\n\n")
     }
-    dset %>% janitor::tabyl(!!rlang::enquo(var1)) %>% janitor::adorn_pct_formatting()
+    y <- dset %>% janitor::tabyl(!!rlang::enquo(var1)) %>% janitor::adorn_pct_formatting()
+    return(y)
   } else {
     str <- dplyr::as_label(rlang::enquo(var1))
     x <- labelled::var_label(dset[[str]])
@@ -88,8 +93,9 @@ tabl <- function(var1, var2, dset=d) {
     if (!is.null(x)) {
       cat(" ", x, "[X]", y, "\n\n")
     }
-    dset %>% janitor::tabyl(!!rlang::enquo(var1), !!rlang::enquo(var2)) %>%
+    y <- dset %>% janitor::tabyl(!!rlang::enquo(var1), !!rlang::enquo(var2)) %>%
       janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>% janitor::adorn_pct_formatting()
+    return(y)
   }}
 
 
@@ -212,11 +218,38 @@ allkryds <- function(x, kryds) {
 
 
 ##################################################################
+##                         get_prefixes                         ##
+##################################################################
+
+get_prefixes <- function(dset = d) {
+  variable_names = names(dset)
+  prefix_parts <- lapply(variable_names, function(x) {
+    parts <- strsplit(x, "_", fixed = TRUE)[[1]]
+    if (length(parts) > 1) {paste0(parts[1], "_")} else {NA}})
+  prefixes <- unlist(prefix_parts)
+  prefix_counts <- table(prefixes)
+  repeated_prefixes <- names(prefix_counts[prefix_counts > 2])
+  a <- repeated_prefixes[!is.na(repeated_prefixes)]
+  return(a)
+}
+
+get_2udfald <- function(dset = d) {
+  a <- get_prefixes(dset)
+  liste <- c()
+  for (i in a) {
+    b <- dset %>% dplyr::select(dplyr::starts_with(i))
+    tab <- janitor::tabyl(b[[1]])
+    if (length(tab$n)==2) {liste = c(liste, i)}}
+  return(liste)
+}
+
+
+##################################################################
 ##                            multi                             ##
 ##################################################################
 
 multi <- function(prefix, valgt, sort = F, dset = d) {
-  z <- d %>%
+  z <- dset %>%
     dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix)))) %>%
     dplyr::mutate_all(~ stringr::str_replace_all(., valgt, "øøøøø"))
   o <- z %>% names()
@@ -227,7 +260,7 @@ multi <- function(prefix, valgt, sort = F, dset = d) {
     if (p[1,1]!="øøøøø") {q <- "0%"} else {q <- p[,3]}
     w <- append(w, q)
   }
-  y <- labelled::var_label(d[[o[1]]])
+  y <- labelled::var_label(dset[[o[1]]])
   if (!is.null(y)) {cat(" ", y, "\n\n")}
   if (sort == T) {
     tibble(name = o, percent = w) %>%
@@ -237,6 +270,34 @@ multi <- function(prefix, valgt, sort = F, dset = d) {
   } else {tibble(name = o, percent = w)}
 }
 
+multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d) {
+  z <- dset %>% 
+    dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix))),
+                  rlang::quo_text(rlang::enquo(krydsvar))) %>% 
+    dplyr::mutate_all(~ stringr::str_replace_all(., valgt, "øøøøø"))
+  o <- z %>% dplyr::select(-rlang::quo_text(rlang::enquo(krydsvar))) %>% names()
+  w <- NULL
+  for (var in o) {
+    k <- tabyl(z, !!sym(var), !!rlang::enquo(krydsvar)) %>% 
+      janitor::adorn_totals(where = "col") %>% 
+      janitor::adorn_percentages(denominator = "col") %>% 
+      janitor::adorn_pct_formatting()
+    p <- k %>% dplyr::arrange(!!sym(var)) %>% utils::tail(1)
+    if (p[1,1]!="øøøøø") {q <- p[,2:ncol(p)] %>% dplyr::mutate_all(~ "0%")} else {
+      q <- p[,2:ncol(p)]}
+    w <- c(w, list(q))
+  }
+  w <- dplyr::bind_rows(w)
+  y <- labelled::var_label(dset[[o[1]]])
+  if (!is.null(y)) {cat(" ", y, "\n\n")}
+  a <- cbind(tibble(" " = o), w)
+  if (sort == T) {
+    a %>% 
+      dplyr::mutate(percent_numeric = as.numeric(sub("%", "", Total))) %>% 
+      dplyr::arrange(dplyr::desc(percent_numeric)) %>% 
+      dplyr::select(-percent_numeric) %>% return()
+  } else {a %>% return()}
+}
 
 #################################################################
 ##                            excel                            ##
@@ -245,7 +306,8 @@ multi <- function(prefix, valgt, sort = F, dset = d) {
 excel <- function(df, filename, ..., totaler=T) {
   
   selected_vars <- sapply(df, function(k) length(unique(k))) < 20
-  selected_df <- df[, selected_vars, drop = FALSE]
+  selected_df <- df[, selected_vars, drop = FALSE] %>% 
+    dplyr::select(-starts_with(get_2udfald(df)))
   navne <- names(selected_df)
   
   x <- selected_df %>% dplyr::mutate(totalvar = "Total")
@@ -255,12 +317,14 @@ excel <- function(df, filename, ..., totaler=T) {
   pp <- NULL
   tom <- tibble(" " = NA, Total=NA)
   
-  # Totaler
+  # Frekvenser
   for (var in navne) {
     a <- x %>% janitor::tabyl(!!sym(var), totalvar) %>%
       janitor::adorn_totals() %>%
       janitor::adorn_percentages(denominator = "col") %>%
       dplyr::mutate_if(is.numeric, round, 2) %>%
+      dplyr::mutate(dplyr::across(everything(), ~if_else(is.na(.), "[NA]", as.character(.)))) %>% 
+      dplyr::mutate(Total = as.numeric(Total)) %>% 
       dplyr::rename(" " = !!sym(var)) %>%
       tibble::as_tibble()
     
@@ -271,8 +335,10 @@ excel <- function(df, filename, ..., totaler=T) {
       ax <- tibble(" " = var, Total=NA)
     }
     
+    hvasså <- tibble(" " = "n =", Total=nrow(x))
+    
     if (is.null(pp)) {
-      pp <- rbind(ax, a, tom)
+      pp <- rbind(hvasså, ax, a, tom)
     } else {
       pp <- rbind(pp, ax, a, tom)
     }
@@ -295,8 +361,13 @@ excel <- function(df, filename, ..., totaler=T) {
         tibble::as_tibble()
       tom <- a[1,] %>% dplyr::mutate_all(~if_else(is.na(.), NA, NA))
       
+      n1 <- y %>% dplyr::mutate(tempooo = "")
+      n2 <- n1 %>% janitor::tabyl(tempooo, tempvar) %>% 
+        dplyr::rename(" " := tempooo) %>% 
+        tibble::as_tibble()
+      
       if (is.null(qq)) {
-        qq <- rbind(tom, a)
+        qq <- rbind(n2, tom, a)
       } else {
         qq <- rbind(qq, tom, tom, a)
       }
@@ -307,6 +378,7 @@ excel <- function(df, filename, ..., totaler=T) {
     print(paste0("Nu har jeg lavet ", rlang::quo_name(kryds)))
   }
   
+  # Totaler?
   if (totaler==F) {
     tempnames <- names(pp)
     names(pp)[1] <- "nejtiltotaler"
@@ -314,16 +386,40 @@ excel <- function(df, filename, ..., totaler=T) {
     pp <- pp %>% dplyr::filter(nejtiltotaler != "Total" | is.na(nejtiltotaler) | nejtiltotaler == "")
     names(pp) <- tempnames}
   
-  options("openxlsx.numFmt" = "0%")
+  # Formatér og eksportér
+  # options("openxlsx.numFmt" = "0%")
+  # hs <- openxlsx::createStyle(textDecoration = "BOLD", halign="center")
+  # openxlsx::write.xlsx(pp, paste0(filename,".xlsx"), zoom=100, firstActiveRow=3,
+  #                      firstActiveCol = 3, headerStyle = hs)
+  
+  # Formatér og eksportér (ny version)
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet 1")
+  openxlsx::writeData(wb, "Sheet 1", pp)
   hs <- openxlsx::createStyle(textDecoration = "BOLD", halign="center")
-  openxlsx::write.xlsx(pp, paste0(filename,".xlsx"), zoom=100, firstActiveRow=2,
-                       firstActiveCol = 3, headerStyle = hs)
+  percentStyle <- openxlsx::createStyle(numFmt = "0%", halign="center")
+  nStyle1 <- openxlsx::createStyle(halign="center", fontSize = 9, numFmt = "General", 
+                                  border = "bottom")
+  nStyle2 <- openxlsx::createStyle(halign="left", fontSize = 9, numFmt = "General",
+                                   border = "bottom")
+  
+  openxlsx::addStyle(wb, "Sheet 1", style = hs, rows = 1, cols = 1:ncol(pp), gridExpand = TRUE)
+  openxlsx::addStyle(wb, "Sheet 1", style = nStyle1, rows = 2, cols = 2:ncol(pp), gridExpand = T)
+  openxlsx::addStyle(wb, "Sheet 1", style = nStyle2, rows = 2, cols = 1, gridExpand = T)
+  openxlsx::addStyle(wb, "Sheet 1", style = percentStyle, rows = 3:nrow(pp)+1, cols = 2:ncol(pp), gridExpand = TRUE)
+  
+  #openxlsx::setActiveSheet(wb, 1)
+  #openxlsx::setActiveCell(wb, "Sheet 1", row = 3, col = 3)
+  
+  openxlsx::saveWorkbook(wb, paste0(filename, ".xlsx"), overwrite = TRUE)
+  
   print("DONE!!")
   
-  for (kryds in args) {
-    print(janitor::tabyl(x, !!kryds))
-    print(cat("\n\n"))
-  }
+  # Krydstabeller for at se n for hver kryds-kategori
+  # for (kryds in args) {
+  #   print(janitor::tabyl(x, !!kryds))
+  #   print(cat("\n\n"))
+  # }
 }
 
 
