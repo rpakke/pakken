@@ -52,6 +52,9 @@ funktioner <- function() {
       "behold:   Behold kun nogle datasæt \n",
       "          - behold(dd, d2) \n\n",
       
+      "get_prefixes:  Find prefixes til multi-tabeller \n",
+      "               - get_prefixes() \n\n",
+      
       
       "\n PS. Husk, at dit datasæt skal hedde 'd' \n")
 }
@@ -248,7 +251,7 @@ get_2udfald <- function(dset = d) {
 ##                            multi                             ##
 ##################################################################
 
-multi <- function(prefix, valgt, sort = F, dset = d) {
+multi <- function(prefix, valgt, sort = F, dset = d, advice=F) {
   z <- dset %>%
     dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix)))) %>%
     dplyr::mutate_all(~ stringr::str_replace_all(., valgt, "øøøøø"))
@@ -261,16 +264,27 @@ multi <- function(prefix, valgt, sort = F, dset = d) {
     w <- append(w, q)
   }
   y <- labelled::var_label(dset[[o[1]]])
+  y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
   if (!is.null(y)) {cat(" ", y, "\n\n")}
+  
+  if (advice == T) {
+    flops <- c()
+    for (i in o) {
+      flop <- labelled::var_label(dset[[i]])
+      flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]] %>% substr(1, 20)
+      flops <- c(flops, flop)
+    }
+  } else {flops <- o}
+  
   if (sort == T) {
-    tibble(name = o, percent = w) %>%
+    tibble(name = flops, percent = w) %>%
       dplyr::mutate(percent_numeric = as.numeric(sub("%", "", percent))) %>% 
       dplyr::arrange(dplyr::desc(percent_numeric)) %>% 
-      dplyr::select(-percent_numeric)
-  } else {tibble(name = o, percent = w)}
+      dplyr::select(-percent_numeric) %>% return()
+  } else {tibble(name = flops, percent = w) %>% return()}
 }
 
-multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d) {
+multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F) {
   z <- dset %>% 
     dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix))),
                   rlang::quo_text(rlang::enquo(krydsvar))) %>% 
@@ -287,10 +301,23 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d) {
       q <- p[,2:ncol(p)]}
     w <- c(w, list(q))
   }
+  
+  if (advice == T) {
+    flops <- c()
+    for (i in o) {
+      flop <- labelled::var_label(dset[[i]])
+      flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]] %>% substr(1, 20)
+      flops <- c(flops, flop)
+    }
+  } else {flops <- o}
+  
   w <- dplyr::bind_rows(w)
+  
   y <- labelled::var_label(dset[[o[1]]])
+  y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
   if (!is.null(y)) {cat(" ", y, "\n\n")}
-  a <- cbind(tibble(" " = o), w)
+  
+  a <- cbind(tibble(" " = flops), w)
   if (sort == T) {
     a %>% 
       dplyr::mutate(percent_numeric = as.numeric(sub("%", "", Total))) %>% 
@@ -308,6 +335,10 @@ excel <- function(df, filename, ..., totaler=T) {
   selected_vars <- sapply(df, function(k) length(unique(k))) < 20
   selected_df <- df[, selected_vars, drop = FALSE] %>% 
     dplyr::select(-starts_with(get_2udfald(df)))
+  
+  selected_df <- selected_df %>% 
+    dplyr::mutate(dplyr::across(where(is.labelled), as.factor))
+  
   navne <- names(selected_df)
   
   x <- selected_df %>% dplyr::mutate(totalvar = "Total")
@@ -319,6 +350,14 @@ excel <- function(df, filename, ..., totaler=T) {
   
   # Frekvenser
   for (var in navne) {
+    
+    xx <- x
+    
+    if(is.factor(x[[var]])) {
+      all_levels <- unique(c(levels(x[[var]]), as.character(x[[var]])))
+      x[[var]] <- factor(x[[var]], levels = all_levels)
+    }
+    
     a <- x %>% janitor::tabyl(!!sym(var), totalvar) %>%
       janitor::adorn_totals() %>%
       janitor::adorn_percentages(denominator = "col") %>%
@@ -328,9 +367,9 @@ excel <- function(df, filename, ..., totaler=T) {
       dplyr::rename(" " = !!sym(var)) %>%
       tibble::as_tibble()
     
-    z <- labelled::var_label(x[[var]])
+    z <- labelled::var_label(xx[[var]])
     if (!is.null(z)) {
-      ax <- tibble(" " = labelled::var_label(x[[var]]), Total=NA)
+      ax <- tibble(" " = labelled::var_label(xx[[var]]), Total=NA)
     } else {
       ax <- tibble(" " = var, Total=NA)
     }
@@ -386,11 +425,80 @@ excel <- function(df, filename, ..., totaler=T) {
     pp <- pp %>% dplyr::filter(nejtiltotaler != "Total" | is.na(nejtiltotaler) | nejtiltotaler == "")
     names(pp) <- tempnames}
   
-  # Formatér og eksportér
-  # options("openxlsx.numFmt" = "0%")
-  # hs <- openxlsx::createStyle(textDecoration = "BOLD", halign="center")
-  # openxlsx::write.xlsx(pp, paste0(filename,".xlsx"), zoom=100, firstActiveRow=3,
-  #                      firstActiveCol = 3, headerStyle = hs)
+  # Multi
+  navne2 <- get_2udfald(df)
+  new_df <- df[, selected_vars, drop = FALSE] %>% dplyr::select(starts_with(get_2udfald(df)))
+  navne3 <- names(new_df)
+  x <- df[, selected_vars, drop = FALSE] %>% dplyr::mutate(dplyr::across(where(is.labelled), as.factor))
+  
+  if (length(navne2) != 0) {
+    pp2 <- NULL
+    tom <- tibble(" " = NA, Total=NA)
+  
+    print("Åhha, så er der multiselect-tabeller også")
+    
+    for (var in navne3) {
+      if (!"Valgt" %in% tabyl(x, !!sym(var))[,1]) {
+        stop("Alle multiselect-variable skal have udfaldene \"Valgt\" og \"Ikke valgt\"")
+      }
+    }
+
+    for (var in navne2) {
+      a <- multi(!!sym(var), "Valgt", dset=x, advice=T) %>% dplyr::mutate(Total = as.numeric(sub("%", "", percent))/100) %>% 
+        dplyr::select(name, Total) %>% dplyr::rename(" " = name)
+      
+      flup <- x %>% dplyr::select(dplyr::starts_with(var)) %>% names()
+       
+      # flops <- c()
+      # for (i in flup) {
+      #   flop <- labelled::var_label(x[[i]])
+      #   flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]]
+      #   flops <- c(flops, flop)
+      # }
+      # 
+      # a[1] <- flops
+      
+      z <- labelled::var_label(x[[flup[1]]])
+      z <- strsplit(z, " - ", fixed = TRUE)[[1]][[1]]
+      
+      if (!is.null(z)) {
+        ax <- tibble(" " = z, Total=NA)
+      } else {
+        ax <- tibble(" " = var, Total=NA)
+      }
+    
+      if (is.null(pp2)) {
+        pp2 <- rbind(ax, a, tom)
+      } else {
+        pp2 <- rbind(pp2, ax, a, tom)
+      }
+    
+    }
+    
+    for (kryds in args) {
+      y <- x %>% mutate(tempvar = !!kryds)
+      qq2 <- NULL
+      
+      for (var in navne2) {
+        a <- multi2(!!sym(var), "Valgt", tempvar, dset=y) %>% dplyr::select(-Total) %>% 
+          dplyr::mutate(!!names(.)[1] := NA) %>% 
+          dplyr::mutate(dplyr::across(everything(), ~ as.numeric(gsub("%", "", .)) / 100))
+        
+        tom <- a[1,] %>% dplyr::mutate_all(~if_else(is.na(.), NA, NA))
+        
+        if (is.null(qq2)) {
+          qq2 <- rbind(tom, a)
+        } else {
+          qq2 <- rbind(qq2, tom, tom, a)
+        }
+      }
+      
+      qq2 <- rbind(qq2, tom)
+      pp2 <- cbind(pp2, qq2)
+    }
+  }
+  
+  pp <- rbind(pp, pp2)
   
   # Formatér og eksportér (ny version)
   wb <- openxlsx::createWorkbook()
@@ -408,18 +516,9 @@ excel <- function(df, filename, ..., totaler=T) {
   openxlsx::addStyle(wb, "Sheet 1", style = nStyle2, rows = 2, cols = 1, gridExpand = T)
   openxlsx::addStyle(wb, "Sheet 1", style = percentStyle, rows = 3:nrow(pp)+1, cols = 2:ncol(pp), gridExpand = TRUE)
   
-  #openxlsx::setActiveSheet(wb, 1)
-  #openxlsx::setActiveCell(wb, "Sheet 1", row = 3, col = 3)
-  
   openxlsx::saveWorkbook(wb, paste0(filename, ".xlsx"), overwrite = TRUE)
   
   print("DONE!!")
-  
-  # Krydstabeller for at se n for hver kryds-kategori
-  # for (kryds in args) {
-  #   print(janitor::tabyl(x, !!kryds))
-  #   print(cat("\n\n"))
-  # }
 }
 
 
