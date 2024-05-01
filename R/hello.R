@@ -333,11 +333,12 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F) {
 excel <- function(df, filename, ..., totaler=T) {
   
   selected_vars <- sapply(df, function(k) length(unique(k))) < 20
-  selected_df <- df[, selected_vars, drop = FALSE] %>% 
-    dplyr::select(-starts_with(get_2udfald(df)))
+  selected_df <- df[, selected_vars, drop = FALSE]
+  
+  if (length(get_2udfald(df))!=0) {selected_df <- selected_df %>% dplyr::select(-starts_with(get_2udfald(df)))}
   
   selected_df <- selected_df %>% 
-    dplyr::mutate(dplyr::across(where(is.labelled), as.factor))
+    dplyr::mutate(dplyr::across(where(expss::is.labelled), as.factor))
   
   navne <- names(selected_df)
   
@@ -427,12 +428,12 @@ excel <- function(df, filename, ..., totaler=T) {
   
   # Multi
   navne2 <- get_2udfald(df)
-  new_df <- df[, selected_vars, drop = FALSE] %>% dplyr::select(starts_with(get_2udfald(df)))
-  navne3 <- names(new_df)
-  x <- df[, selected_vars, drop = FALSE] %>% dplyr::mutate(dplyr::across(where(is.labelled), as.factor))
-  
+  pp2 <- NULL
   if (length(navne2) != 0) {
-    pp2 <- NULL
+    new_df <- df[, selected_vars, drop = FALSE] %>% dplyr::select(starts_with(get_2udfald(df)))
+    navne3 <- names(new_df)
+    x <- df[, selected_vars, drop = FALSE] %>% dplyr::mutate(dplyr::across(where(expss::is.labelled), as.factor))
+    
     tom <- tibble(" " = NA, Total=NA)
   
     print("Åhha, så er der multiselect-tabeller også")
