@@ -151,7 +151,7 @@ scat2 <- function(var1, var2, dset=d) {
 alltabs <- function(x) {
   navne <- names(x)
   for (var in navne) {
-    y <- labelled::var_label(d[[var]])
+    y <- labelled::var_label(x[[var]])
     if (!is.null(y)) {
       cat(" ", y, "\n\n")
     }
@@ -271,7 +271,7 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F) {
     flops <- c()
     for (i in o) {
       flop <- labelled::var_label(dset[[i]])
-      flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]] %>% substr(1, 20)
+      flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]] %>% substr(1, 40)
       flops <- c(flops, flop)
     }
   } else {flops <- o}
@@ -306,7 +306,7 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F) {
     flops <- c()
     for (i in o) {
       flop <- labelled::var_label(dset[[i]])
-      flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]] %>% substr(1, 20)
+      flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]] %>% substr(1, 40)
       flops <- c(flops, flop)
     }
   } else {flops <- o}
