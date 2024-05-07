@@ -251,7 +251,7 @@ get_2udfald <- function(dset = d) {
 ##                            multi                             ##
 ##################################################################
 
-multi <- function(prefix, valgt, sort = F, dset = d, advice=F) {
+multi <- function(prefix, valgt, sort = F, dset = d, advice=F, maksimum=40) {
   z <- dset %>%
     dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix)))) %>%
     dplyr::mutate_all(~ stringr::str_replace_all(., valgt, "øøøøø"))
@@ -271,7 +271,7 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F) {
     flops <- c()
     for (i in o) {
       flop <- labelled::var_label(dset[[i]])
-      flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]] %>% substr(1, 40)
+      flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]] %>% substr(1, maksimum)
       flops <- c(flops, flop)
     }
   } else {flops <- o}
@@ -284,7 +284,7 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F) {
   } else {tibble(name = flops, percent = w) %>% return()}
 }
 
-multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F) {
+multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum=40) {
   z <- dset %>% 
     dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix))),
                   rlang::quo_text(rlang::enquo(krydsvar))) %>% 
@@ -306,7 +306,7 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F) {
     flops <- c()
     for (i in o) {
       flop <- labelled::var_label(dset[[i]])
-      flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]] %>% substr(1, 40)
+      flop <- strsplit(flop, " - ", fixed = TRUE)[[1]][[2]] %>% substr(1, maksimum)
       flops <- c(flops, flop)
     }
   } else {flops <- o}
@@ -348,6 +348,7 @@ excel <- function(df, filename, ..., totaler=T) {
   
   pp <- NULL
   tom <- tibble(" " = NA, Total=NA)
+  titleRows <- c(3)
   
   # Frekvenser
   for (var in navne) {
@@ -380,6 +381,7 @@ excel <- function(df, filename, ..., totaler=T) {
     if (is.null(pp)) {
       pp <- rbind(hvasså, ax, a, tom)
     } else {
+      titleRows <- c(titleRows, nrow(pp)+2)
       pp <- rbind(pp, ax, a, tom)
     }
     
@@ -445,7 +447,7 @@ excel <- function(df, filename, ..., totaler=T) {
     }
 
     for (var in navne2) {
-      a <- multi(!!sym(var), "Valgt", dset=x, advice=T) %>% dplyr::mutate(Total = as.numeric(sub("%", "", percent))/100) %>% 
+      a <- multi(!!sym(var), "Valgt", dset=x, advice=T, maksimum=1000) %>% dplyr::mutate(Total = as.numeric(sub("%", "", percent))/100) %>% 
         dplyr::select(name, Total) %>% dplyr::rename(" " = name)
       
       flup <- x %>% dplyr::select(dplyr::starts_with(var)) %>% names()
@@ -469,8 +471,10 @@ excel <- function(df, filename, ..., totaler=T) {
       }
     
       if (is.null(pp2)) {
+        titleRows <- c(titleRows, nrow(pp)+2)
         pp2 <- rbind(ax, a, tom)
       } else {
+        titleRows <- c(titleRows, nrow(pp)+2 + nrow(pp2))
         pp2 <- rbind(pp2, ax, a, tom)
       }
     
@@ -481,7 +485,7 @@ excel <- function(df, filename, ..., totaler=T) {
       qq2 <- NULL
       
       for (var in navne2) {
-        a <- multi2(!!sym(var), "Valgt", tempvar, dset=y) %>% dplyr::select(-Total) %>% 
+        a <- multi2(!!sym(var), "Valgt", tempvar, dset=y, maksimum=1000) %>% dplyr::select(-Total) %>% 
           dplyr::mutate(!!names(.)[1] := NA) %>% 
           dplyr::mutate(dplyr::across(everything(), ~ as.numeric(gsub("%", "", .)) / 100))
         
@@ -511,11 +515,14 @@ excel <- function(df, filename, ..., totaler=T) {
                                   border = "bottom")
   nStyle2 <- openxlsx::createStyle(halign="left", fontSize = 9, numFmt = "General",
                                    border = "bottom")
+  titleStyle <- openxlsx::createStyle(halign="left", textDecoration = "bold",
+                                      fgFill = "#D8BFD8")
   
   openxlsx::addStyle(wb, "Sheet 1", style = hs, rows = 1, cols = 1:ncol(pp), gridExpand = TRUE)
   openxlsx::addStyle(wb, "Sheet 1", style = nStyle1, rows = 2, cols = 2:ncol(pp), gridExpand = T)
   openxlsx::addStyle(wb, "Sheet 1", style = nStyle2, rows = 2, cols = 1, gridExpand = T)
   openxlsx::addStyle(wb, "Sheet 1", style = percentStyle, rows = 3:nrow(pp)+1, cols = 2:ncol(pp), gridExpand = TRUE)
+  openxlsx::addStyle(wb, "Sheet 1", style = titleStyle, rows = titleRows, cols = 1:ncol(pp), gridExpand = T)
   
   openxlsx::saveWorkbook(wb, paste0(filename, ".xlsx"), overwrite = TRUE)
   
