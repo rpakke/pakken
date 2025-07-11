@@ -251,7 +251,7 @@ get_2udfald <- function(dset = d) {
 ##                            multi                             ##
 ##################################################################
 
-multi <- function(prefix, valgt, sort = F, dset = d, advice=F, maksimum=40) {
+multi <- function(prefix, valgt, sort = F, dset = d, advice=F, label=F, maksimum=40) {
   z <- dset %>%
     dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix)))) %>%
     dplyr::mutate_all(~ stringr::str_replace_all(., valgt, "øøøøø"))
@@ -263,14 +263,15 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F, maksimum=40) {
     if (p[1,1]!="øøøøø") {q <- "0%"} else {q <- p[,3]}
     w <- append(w, q)
   }
-  
-  y <- labelled::var_label(dset[[o[1]]])
-  if (!is.null(y)) {
-    y <- as.character(y)
-    y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
-    cat(" ", y, "\n\n")
-  }
 
+  if (label == T) {
+    y <- labelled::var_label(dset[[o[1]]])
+    if (!is.null(y)) {
+      y <- as.character(y)
+      y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
+      cat(" ", y, "\n\n")
+    }
+  }
   
   if (advice == T) {
     flops <- c()
@@ -318,12 +319,13 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum
   
   w <- dplyr::bind_rows(w)
   
- 
-  y <- labelled::var_label(dset[[o[1]]])
-  if (!is.null(y)) {
-    y <- as.character(y)
-    y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
-    cat(" ", y, "\n\n")
+ if (label == T) {
+    y <- labelled::var_label(dset[[o[1]]])
+    if (!is.null(y)) {
+      y <- as.character(y)
+      y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
+      cat(" ", y, "\n\n")
+    }
   }
   
   a <- cbind(tibble(" " = flops), w)
