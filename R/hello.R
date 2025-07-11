@@ -319,11 +319,9 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum
   
  if (label == T) {
     y <- labelled::var_label(dset[[o[1]]])
-    if (!is.null(y)) {
-      y <- as.character(y)
-      y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
-      cat(" ", y, "\n\n")
-    }
+    if (!is.null(y)) {y <- as.character(y)
+                      y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
+                      cat(" ", y, "\n\n")}
   } else {cat(" ", "\n\n")}
   
   a <- cbind(tibble(" " = flops), w)
