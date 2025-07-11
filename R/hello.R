@@ -268,7 +268,7 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F, labl=T, maksimum=
   if (!is.null(y) & labl == T) {
     y <- as.character(y)
     y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
-    cat(" ", y, "\n\n")}
+    cat(" ", y, "\n\n")
   }
   
   if (advice == T) {
@@ -321,7 +321,7 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum
   if (!is.null(y) & labl == T) {
     y <- as.character(y)
     y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
-    cat(" ", y, "\n\n")}
+    cat(" ", y, "\n\n")
   }
   
   a <- cbind(tibble(" " = flops), w)
