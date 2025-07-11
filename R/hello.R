@@ -263,9 +263,14 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F, maksimum=40) {
     if (p[1,1]!="øøøøø") {q <- "0%"} else {q <- p[,3]}
     w <- append(w, q)
   }
+  
   y <- labelled::var_label(dset[[o[1]]])
-  y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
-  if (!is.null(y)) {cat(" ", y, "\n\n")}
+  if (!is.null(y)) {
+    y <- as.character(y)
+    y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
+    cat(" ", y, "\n\n")
+  }
+
   
   if (advice == T) {
     flops <- c()
@@ -313,9 +318,13 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum
   
   w <- dplyr::bind_rows(w)
   
+ 
   y <- labelled::var_label(dset[[o[1]]])
-  y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
-  if (!is.null(y)) {cat(" ", y, "\n\n")}
+  if (!is.null(y)) {
+    y <- as.character(y)
+    y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
+    cat(" ", y, "\n\n")
+  }
   
   a <- cbind(tibble(" " = flops), w)
   if (sort == T) {
