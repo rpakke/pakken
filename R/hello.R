@@ -267,9 +267,8 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F, label=T, maksimum
   if (label == T) {
     y <- labelled::var_label(dset[[o[1]]])
     if (!is.null(y)) {y <- as.character(y)
-      y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
-      cat(" ", y, "\n\n")
-    }
+                      y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
+                      cat(" ", y, "\n\n")}
   } else {cat(" ", "\n\n")}
   
   if (advice == T) {
