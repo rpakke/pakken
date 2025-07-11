@@ -267,11 +267,11 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F, label=T, maksimum
   if (label == T) {
     y <- labelled::var_label(dset[[o[1]]])
     if (!is.null(y)) {
-    y <- as.character(y)
-    y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
-    cat(" ", y, "\n\n")
+      y <- as.character(y)
+      y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
+      cat(" ", y, "\n\n")
     }
-  } else {cat(" ", "\n\n"}
+  } else {cat(" ", "\n\n")}
   
   if (advice == T) {
     flops <- c()
@@ -326,7 +326,7 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum
       y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]
       cat(" ", y, "\n\n")
     }
-  } else {cat(" ", "\n\n"}
+  } else {cat(" ", "\n\n")}
   
   a <- cbind(tibble(" " = flops), w)
   if (sort == T) {
