@@ -33,6 +33,10 @@ funktioner <- function() {
       "multi2:   Samme, men nu som krydstabel! \n",
       "          - multi2(prefix, valgt, krydsvar, sort = F, dset=d) \n",
       "          - fx multi2(t_, \"Meget enig\", region) \n\n",
+
+      "flipden:  Flipper en tabel \n",
+      "          - flipden(x) \n",
+      "          - fx tabl(køn, branche) %>% flipden() \n\n",
       
       "excel:    Excel-krydstabeller for alle variable i x \n",
       "          - excel(x, 'filnavn', krydsvar1, krydsvar2, ..., totaler=T) \n",
@@ -333,6 +337,19 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum
       dplyr::select(-percent_numeric) %>% return()
   } else {a %>% return()}
 }
+
+
+#################################################################
+##                           flipden                           ##
+#################################################################
+
+flipden <- function(x) {
+  x %>% mutate(row = row_number()) %>% 
+    pivot_longer(-row, names_to = "column", values_to = "value") %>% 
+    pivot_wider(names_from = row, values_from = value) %>% 
+    row_to_names(row_number = 1)
+}
+
 
 #################################################################
 ##                            excel                            ##
