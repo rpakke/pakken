@@ -304,7 +304,95 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F, maksimum=40) {
   } else {tibble(name = flops, percent = w) %>% return()}
 }
 
-multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum=40) {
+multi2 <- function(prefix, valgt, krydsvar, sort = FALSE, dset = d, advice = FALSE, maksimum = 40) {
+  pref_txt  <- rlang::quo_text(rlang::enquo(prefix))
+  kryds_txt <- rlang::quo_text(rlang::enquo(krydsvar))
+
+  zz <- dset %>%
+    dplyr::select(dplyr::starts_with(pref_txt), !!rlang::sym(kryds_txt))
+
+  z <- zz %>% tidyr::drop_na()
+  if (nrow(z) != nrow(zz)) message("Jeg har droppet NAs")
+
+  # --- ÆNDRING 1: recode KUN prefix-kolonner ---
+  valgt_chr <- as.character(valgt)
+  z <- z %>%
+    dplyr::mutate(
+      dplyr::across(
+        dplyr::starts_with(pref_txt),
+        ~ dplyr::if_else(as.character(.x) == valgt_chr, "Valgt", "Ikke valgt", missing = NA_character_)
+      )
+    )
+  valgt <- "Valgt"
+
+  # --- ÆNDRING 2: string replace KUN på prefix-kolonner ---
+  z <- z %>%
+    dplyr::mutate(
+      dplyr::across(
+        dplyr::starts_with(pref_txt),
+        ~ stringr::str_replace_all(.x, stringr::fixed(valgt), "øøøøø")
+      )
+    )
+
+  o <- z %>% dplyr::select(dplyr::starts_with(pref_txt)) %>% names()
+  w <- NULL
+  for (var in o) {
+    k <- janitor::tabyl(z, !!rlang::sym(var), !!rlang::ensym(krydsvar)) %>%
+      janitor::adorn_totals(where = "col") %>%
+      janitor::adorn_percentages(denominator = "col") %>%
+      janitor::adorn_pct_formatting()
+
+    p <- k %>% dplyr::arrange(!!rlang::sym(var)) %>% utils::tail(1)
+    if (p[1, 1] != "øøøøø") {
+      q <- p[, 2:ncol(p)] %>% dplyr::mutate(dplyr::across(dplyr::everything(), ~ "0%"))
+    } else {
+      q <- p[, 2:ncol(p)]
+    }
+    w <- c(w, list(q))
+  }
+
+  if (isTRUE(advice)) {
+    flops <- vapply(
+      o,
+      function(i) {
+        lab <- labelled::var_label(dset[[i]])
+        lab <- if (is.null(lab)) i else as.character(lab)
+        parts <- strsplit(lab, " - ", fixed = TRUE)[[1]]
+        if (length(parts) >= 2) substr(parts[2], 1, maksimum) else substr(lab, 1, maksimum)
+      },
+      FUN.VALUE = character(1)
+    )
+  } else {
+    flops <- o
+  }
+
+  w <- dplyr::bind_rows(w)
+
+  # Safe label-overskrift (undgår subscript out of bounds)
+  get_first_label <- function(x, default) {
+    lab <- labelled::var_label(x)
+    if (is.null(lab) || length(lab) == 0) return(default)
+    lab_chr <- as.character(lab)[1]
+    if (is.na(lab_chr)) return(default)
+    if (grepl(" - ", lab_chr, fixed = TRUE)) strsplit(lab_chr, " - ", fixed = TRUE)[[1]][1] else lab_chr
+  }
+
+  y <- get_first_label(dset[[o[1]]], default = o[1])
+  cat(" ", y, "\n\n")
+
+  a <- cbind(tibble::tibble(" " = flops), w)
+  if (isTRUE(sort)) {
+    a %>%
+      dplyr::mutate(percent_numeric = as.numeric(sub("%", "", Total))) %>%
+      dplyr::arrange(dplyr::desc(percent_numeric)) %>%
+      dplyr::select(-percent_numeric) %>%
+      return()
+  } else {
+    return(a)
+  }
+}
+
+multi2_backup <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum=40) {
   zz <- dset %>% 
     dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix))),
                   rlang::quo_text(rlang::enquo(krydsvar)))
@@ -586,6 +674,7 @@ behold <- function(...) {
   objs_remove <- setdiff(objs, keeps_exist)
   if (length(objs_remove)>0) {rm(list=objs_remove, pos=1)}
 }
+
 
 
 
