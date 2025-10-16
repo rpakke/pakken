@@ -261,9 +261,18 @@ get_2udfald <- function(dset = d) {
 ##################################################################
 
 multi <- function(prefix, valgt, sort = F, dset = d, advice=F, maksimum=40) {
-  z <- dset %>%
-    dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix)))) %>%
-    dplyr::mutate_all(~ stringr::str_replace_all(., valgt, "øøøøø"))
+  zz <- dset %>%
+    dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix))))
+  
+  z <- zz %>% tidyr::drop_na()
+  if (count(z)[1,1] != count(zz)[1,1]) {
+    print("Jeg har droppet NAs")
+  }
+  
+  z <- z %>% dplyr::mutate_all(~ dplyr::if_else(. == valgt, "Valgt", "Ikke valgt"))
+  valgt <- "Valgt"
+  
+  z <- z %>% dplyr::mutate_all(~ stringr::str_replace_all(., valgt, "øøøøø"))
   o <- z %>% names()
   w <- c()
   for (var in o) {
@@ -272,7 +281,7 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F, maksimum=40) {
     if (p[1,1]!="øøøøø") {q <- "0%"} else {q <- p[,3]}
     w <- append(w, q)
   }
-
+  
   y <- labelled::var_label(dset[[o[1]]])
   y <- as.character(y)
   if (!is.null(y) & advice==T) {y <- strsplit(y, " - ", fixed = TRUE)[[1]][[1]]}
@@ -296,10 +305,19 @@ multi <- function(prefix, valgt, sort = F, dset = d, advice=F, maksimum=40) {
 }
 
 multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum=40) {
-  z <- dset %>% 
+  zz <- dset %>% 
     dplyr::select(dplyr::starts_with(rlang::quo_text(rlang::enquo(prefix))),
-                  rlang::quo_text(rlang::enquo(krydsvar))) %>% 
-    dplyr::mutate_all(~ stringr::str_replace_all(., valgt, "øøøøø"))
+                  rlang::quo_text(rlang::enquo(krydsvar)))
+    
+  z <- zz %>% tidyr::drop_na()
+  if (count(z)[1,1] != count(zz)[1,1]) {
+    print("Jeg har droppet NAs")
+  }
+  
+  z <- z %>% dplyr::mutate_all(~ dplyr::if_else(. == valgt, "Valgt", "Ikke valgt"))
+  valgt <- "Valgt"
+    
+  z <- z %>% dplyr::mutate_all(~ stringr::str_replace_all(., valgt, "øøøøø"))
   o <- z %>% dplyr::select(-rlang::quo_text(rlang::enquo(krydsvar))) %>% names()
   w <- NULL
   for (var in o) {
@@ -337,7 +355,6 @@ multi2 <- function(prefix, valgt, krydsvar, sort = F, dset=d, advice=F, maksimum
       dplyr::select(-percent_numeric) %>% return()
   } else {a %>% return()}
 }
-
 
 #################################################################
 ##                           flipden                           ##
@@ -569,6 +586,7 @@ behold <- function(...) {
   objs_remove <- setdiff(objs, keeps_exist)
   if (length(objs_remove)>0) {rm(list=objs_remove, pos=1)}
 }
+
 
 
 
