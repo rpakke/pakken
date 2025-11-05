@@ -7,7 +7,8 @@ funktioner <- function() {
       
       "\n ***** TABELLER MV. ***** \n\n",
       "tabl:     Frekvenstabeller og krydstabeller \n",
-      "          - tabl(var1) eller tabl(var1, var2) \n\n",
+      "          - tabl(var1) eller tabl(var1, var2) \n",
+      "          - ELLER tabl(var1, wt = vægt) \n\n"
       
       "grp:      Grouped means \n",
       "          - grp(group_var, mean_var) \n\n",
@@ -88,7 +89,7 @@ pik <- function() {print("pik")}
 ##                             tabl                             ##
 ##################################################################
 
-tabl <- function(var1, var2, dset=d) {
+tabl_backup <- function(var1, var2, dset=d) {
   if (missing(var2)) {
     str <- dplyr::as_label(rlang::enquo(var1))
     x <- labelled::var_label(dset[[str]])
@@ -109,6 +110,50 @@ tabl <- function(var1, var2, dset=d) {
       janitor::adorn_totals() %>% janitor::adorn_percentages(denominator = "col") %>% janitor::adorn_pct_formatting()
     return(y)
   }}
+
+
+tabl <- function(var1, var2, dset = d, wt) {
+  if (missing(var2)) {
+    str <- dplyr::as_label(rlang::enquo(var1))
+    x <- labelled::var_label(dset[[str]])
+    if (!is.null(x)) {
+      cat(" ", x, "\n\n")
+    }
+    if (missing(wt)) {
+      y <- dset %>%
+        janitor::tabyl(!!rlang::enquo(var1)) %>%
+        janitor::adorn_pct_formatting()
+    } else {
+      y <- dset %>%
+        janitor::tabyl(!!rlang::enquo(var1), weights = !!rlang::enquo(wt)) %>%
+        janitor::adorn_pct_formatting()
+    }
+    return(y)
+  } else {
+    str <- dplyr::as_label(rlang::enquo(var1))
+    x <- labelled::var_label(dset[[str]])
+    str <- dplyr::as_label(rlang::enquo(var2))
+    y <- labelled::var_label(dset[[str]])
+    if (!is.null(x)) {
+      cat(" ", x, "[X]", y, "\n\n")
+    }
+    if (missing(wt)) {
+      y <- dset %>%
+        janitor::tabyl(!!rlang::enquo(var1), !!rlang::enquo(var2)) %>%
+        janitor::adorn_totals() %>%
+        janitor::adorn_percentages(denominator = "col") %>%
+        janitor::adorn_pct_formatting()
+    } else {
+      y <- dset %>%
+        janitor::tabyl(!!rlang::enquo(var1), !!rlang::enquo(var2), weights = !!rlang::enquo(wt)) %>%
+        janitor::adorn_totals() %>%
+        janitor::adorn_percentages(denominator = "col") %>%
+        janitor::adorn_pct_formatting()
+    }
+    return(y)
+  }
+}
+
 
 
 #################################################################
@@ -460,7 +505,7 @@ flipden <- function(x) {
 ##                            excel                            ##
 #################################################################
 
-excel <- function(df, filename, ..., totaler=T) {
+excel_backup <- function(df, filename, ..., totaler=T) {
   
   selected_vars <- sapply(df, function(k) length(unique(k))) < 20
   selected_df <- df[, selected_vars, drop = FALSE]
@@ -659,6 +704,165 @@ excel <- function(df, filename, ..., totaler=T) {
   print("DONE!!")
 }
 
+                          
+excel <- function(df, filename, ..., totaler=T, wt) {
+
+  wt_q    <- rlang::enquo(wt)
+  has_wt  <- !rlang::quo_is_missing(wt_q)
+  wt_name <- if (has_wt) rlang::as_name(wt_q) else NULL
+  
+  selected_vars <- sapply(df, function(k) length(unique(k))) < 20
+  selected_df <- df[, selected_vars, drop = FALSE]                        
+  if (has_wt && wt_name %in% names(df) && !(wt_name %in% names(selected_df))) {
+    selected_df[[wt_name]] <- df[[wt_name]]}
+  
+  if (length(get_2udfald(df))!=0) {selected_df <- selected_df %>% dplyr::select(-starts_with(get_2udfald(df)))}
+  
+  selected_df <- selected_df %>%
+    dplyr::mutate(dplyr::across(where(expss::is.labelled) & !dplyr::all_of(wt_name) , as.factor))
+  
+  navne <- if (has_wt) setdiff(names(selected_df), wt_name) else names(selected_df)
+  
+  x <- selected_df %>% dplyr::mutate(totalvar = "Total")
+  
+  args <- rlang::enquos(...)
+  
+  pp <- NULL
+  tom <- tibble(" " = NA, Total=NA)
+  titleRows <- c(3)
+  
+  # Frekvenser
+  for (var in navne) {
+    
+    xx <- x
+    
+    if(is.factor(x[[var]])) {
+      all_levels <- unique(c(levels(x[[var]]), as.character(x[[var]])))
+      x[[var]] <- factor(x[[var]], levels = all_levels)
+    }
+
+    if (missing(wt)) {
+      a <- x %>% janitor::tabyl(!!sym(var), totalvar) %>%
+      janitor::adorn_totals() %>%
+      janitor::adorn_percentages(denominator = "col") %>%
+      dplyr::mutate_if(is.numeric, round, 2) %>%
+      dplyr::mutate(dplyr::across(everything(), ~if_else(is.na(.), "[NA]", as.character(.)))) %>% 
+      dplyr::mutate(Total = as.numeric(Total)) %>% 
+      dplyr::rename(" " = !!sym(var)) %>%
+      tibble::as_tibble()
+    } else {
+      a <- x %>% janitor::tabyl(!!sym(var), totalvar,  weights = !!rlang::enquo(wt)) %>%
+      janitor::adorn_totals() %>%
+      janitor::adorn_percentages(denominator = "col") %>%
+      dplyr::mutate_if(is.numeric, round, 2) %>%
+      dplyr::mutate(dplyr::across(everything(), ~if_else(is.na(.), "[NA]", as.character(.)))) %>% 
+      dplyr::mutate(Total = as.numeric(Total)) %>% 
+      dplyr::rename(" " = !!sym(var)) %>%
+      tibble::as_tibble()
+    }
+    
+    z <- labelled::var_label(xx[[var]])
+    if (!is.null(z)) {
+      ax <- tibble(" " = labelled::var_label(xx[[var]]), Total=NA)
+    } else {
+      ax <- tibble(" " = var, Total=NA)
+    }
+    
+    hvasså <- tibble(" " = "n =", Total=nrow(x))
+    
+    if (is.null(pp)) {
+      pp <- rbind(hvasså, ax, a, tom)
+    } else {
+      titleRows <- c(titleRows, nrow(pp)+2)
+      pp <- rbind(pp, ax, a, tom)
+    }
+    
+  }
+  
+  print("Så er vi i gang")
+  
+  # Kryds
+  for (kryds in args) {
+    y <- x %>% mutate(tempvar = !!kryds)
+    qq <- NULL
+    for (var in navne) {
+      if(missing(wt)) {
+        a <- y %>% janitor::tabyl(!!sym(var), tempvar) %>%
+        janitor::adorn_totals() %>%
+        janitor::adorn_percentages(denominator = "col") %>%
+        dplyr::mutate_if(is.numeric, round, 2) %>%
+        dplyr::mutate(!!sym(var) := NA) %>%
+        dplyr::rename(" " := !!sym(var)) %>%
+        tibble::as_tibble()
+      } else {
+        a <- y %>% janitor::tabyl(!!sym(var), tempvar, weights = !!rlang::enquo(wt)) %>%
+        janitor::adorn_totals() %>%
+        janitor::adorn_percentages(denominator = "col") %>%
+        dplyr::mutate_if(is.numeric, round, 2) %>%
+        dplyr::mutate(!!sym(var) := NA) %>%
+        dplyr::rename(" " := !!sym(var)) %>%
+        tibble::as_tibble()
+      }
+      
+      tom <- a[1,] %>% dplyr::mutate_all(~if_else(is.na(.), NA, NA))
+      
+      n1 <- y %>% dplyr::mutate(tempooo = "")
+      n2 <- n1 %>% janitor::tabyl(tempooo, tempvar) %>% 
+        dplyr::rename(" " := tempooo) %>% 
+        tibble::as_tibble()
+      
+      if (is.null(qq)) {
+        qq <- rbind(n2, tom, a)
+      } else {
+        qq <- rbind(qq, tom, tom, a)
+      }
+    }
+    
+    qq <- rbind(qq, tom)
+    pp <- cbind(pp, qq)
+    print(paste0("Nu har jeg lavet ", rlang::quo_name(kryds)))
+  }
+  
+  # Totaler?
+  if (totaler==F) {
+    tempnames <- names(pp)
+    names(pp)[1] <- "nejtiltotaler"
+    names(pp) <- make.unique(names(pp))
+    pp <- pp %>% dplyr::filter(nejtiltotaler != "Total" | is.na(nejtiltotaler) | nejtiltotaler == "")
+    names(pp) <- tempnames}
+  
+  # Multi
+  navne2 <- get_2udfald(df)
+  pp2 <- NULL
+  if (length(navne2) != 0) {
+    print("Jeg kan stadig ikke finde ud af at lave multiselect i excel :(")
+  }
+  
+  pp <- rbind(pp, pp2)
+  
+  # Formatér og eksportér (ny version)
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet 1")
+  openxlsx::writeData(wb, "Sheet 1", pp)
+  hs <- openxlsx::createStyle(textDecoration = "BOLD", halign="center")
+  percentStyle <- openxlsx::createStyle(numFmt = "0%", halign="center")
+  nStyle1 <- openxlsx::createStyle(halign="center", fontSize = 9, numFmt = "General", 
+                                  border = "bottom")
+  nStyle2 <- openxlsx::createStyle(halign="left", fontSize = 9, numFmt = "General",
+                                   border = "bottom")
+  titleStyle <- openxlsx::createStyle(halign="left", textDecoration = "bold",
+                                      fgFill = "#D8BFD8")
+  
+  openxlsx::addStyle(wb, "Sheet 1", style = hs, rows = 1, cols = 1:ncol(pp), gridExpand = TRUE)
+  openxlsx::addStyle(wb, "Sheet 1", style = nStyle1, rows = 2, cols = 2:ncol(pp), gridExpand = T)
+  openxlsx::addStyle(wb, "Sheet 1", style = nStyle2, rows = 2, cols = 1, gridExpand = T)
+  openxlsx::addStyle(wb, "Sheet 1", style = percentStyle, rows = 3:nrow(pp)+1, cols = 2:ncol(pp), gridExpand = TRUE)
+  openxlsx::addStyle(wb, "Sheet 1", style = titleStyle, rows = titleRows, cols = 1:ncol(pp), gridExpand = T)
+  
+  openxlsx::saveWorkbook(wb, paste0(filename, ".xlsx"), overwrite = TRUE)
+  
+  print("DONE!!")
+}
 
 ##################################################################
 ##                            behold                            ##
@@ -674,6 +878,7 @@ behold <- function(...) {
   objs_remove <- setdiff(objs, keeps_exist)
   if (length(objs_remove)>0) {rm(list=objs_remove, pos=1)}
 }
+
 
 
 
