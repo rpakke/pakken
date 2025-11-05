@@ -8,7 +8,7 @@ funktioner <- function() {
       "\n ***** TABELLER MV. ***** \n\n",
       "tabl:     Frekvenstabeller og krydstabeller \n",
       "          - tabl(var1) eller tabl(var1, var2) \n",
-      "          - ELLER tabl(var1, wt = vægt) \n\n"
+      "          - EVT. tabl(var1, wt = vægt) \n\n",
       
       "grp:      Grouped means \n",
       "          - grp(group_var, mean_var) \n\n",
@@ -41,7 +41,8 @@ funktioner <- function() {
       
       "excel:    Excel-krydstabeller for alle variable i x \n",
       "          - excel(x, 'filnavn', krydsvar1, krydsvar2, ..., totaler=T) \n",
-      "          - fx excel(d, 'Tabeller', køn, region, segment, totaler=F) \n\n",
+      "          - fx excel(d, 'Tabeller', køn, region, segment, totaler=F) \n",
+      "          - EVT. excel(d, 'Tabeller', køn, region, segment, totaler=F, wt=vægt) \n\n",
       
       "\n ***** GRAFER ****** \n\n",
       "bar:      Søjlediagram \n",
@@ -878,6 +879,7 @@ behold <- function(...) {
   objs_remove <- setdiff(objs, keeps_exist)
   if (length(objs_remove)>0) {rm(list=objs_remove, pos=1)}
 }
+
 
 
 
